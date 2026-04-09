@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macrolens | Real-Time USD Sentiment Engine</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <main class="container">
+        <header class="hero">
+            <h1>MACRO<span class="highlight">LENS</span></h1>
+            <p class="subtitle">Institutional-Level Macro Insight • See the Dollar Before It Moves</p>
+            <div class="status-bar">
+                <span class="live-indicator"><span class="dot"></span>Live</span>
+                <span id="timestamp">Last Updated: --:--:--</span>
+            </div>
+        </header>
+
+        <section class="bias-panel glass-card">
+            <h2>Overall USD Bias</h2>
+            <h3 id="bias-text" class="neutral-text">Analyzing Data...</h3>
+            
+            <div class="meter-container">
+                <div class="meter-labels">
+                    <span>Strong Bearish</span>
+                    <span>Neutral</span>
+                    <span>Strong Bullish</span>
+                </div>
+                <div class="meter-track">
+                    <div id="meter-fill" class="meter-fill"></div>
+                    <div class="meter-center-line"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="heatmap-section glass-card">
+            <div class="table-controls">
+                <h2>Economic Heatmap</h2>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="high-impact-toggle">
+                    <span class="slider"></span>
+                    <span class="toggle-label">High Impact Only</span>
+                </label>
+            </div>
+
+            <div class="table-responsive">
+                <table id="heatmap-table">
+                    <thead>
+                        <tr>
+                            <th>Indicator</th>
+                            <th>Impact</th>
+                            <th>Previous</th>
+                            <th>Forecast</th>
+                            <th>Actual</th>
+                            <th>USD Effect</th>
+                        </tr>
+                    </thead>
+                    <tbody id="heatmap-body">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <footer class="footer">
+            <p>Macrolens © 2026 | Real-Time Sentiment Engine</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
