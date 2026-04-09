@@ -39,19 +39,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             maxPossibleScore += weight;
 
-            // Difference logic
-            let diff = actual - forecast;
-            
-            // Inverse logic (e.g. Higher unemployment = Bearish USD)
-            if (row.Correlation === 'Inverse') {
-                diff = diff * -1;
-            }
+            // Inside calculateBias(data), replace the difference logic with this:
 
-            if (diff > 0) {
-                totalScore += weight; // Bullish
-            } else if (diff < 0) {
-                totalScore -= weight; // Bearish
-            }
+let diff = actual - forecast;
+
+// AUTOMATIC INVERSE LOGIC: Detects Unemployment or Claims
+const isInverse = row.Correlation === 'Inverse' || 
+                  row.Indicator.toLowerCase().includes('unemployment') || 
+                  row.Indicator.toLowerCase().includes('claims');
+
+if (isInverse) {
+    diff = diff * -1; // Flips the math: Higher actual now results in a negative (Bearish) number
+}
+
+if (diff > 0) {
+    totalScore += weight; // Bullish
+} else if (diff < 0) {
+    totalScore -= weight; // Bearish
+}
         });
 
         // Normalize score between -100 and +100
@@ -98,25 +103,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const showHighImpactOnly = toggleHighImpact.checked;
 
         data.forEach(row => {
-            if (showHighImpactOnly && row.Impact !== 'High') return;
+           // Inside renderTable(data), replace the difference logic with this:
 
-            const actualNum = parseEconomicValue(row.Actual);
-            const forecastNum = parseEconomicValue(row.Forecast);
-            
-            let resultClass = "neutral-text";
-            let effectLabel = "Neutral";
+if (!isNaN(actualNum) && !isNaN(forecastNum)) {
+    let diff = actualNum - forecastNum;
+    
+    // AUTOMATIC INVERSE LOGIC: Detects Unemployment or Claims
+    const isInverse = row.Correlation === 'Inverse' || 
+                      row.Indicator.toLowerCase().includes('unemployment') || 
+                      row.Indicator.toLowerCase().includes('claims');
 
-            if (!isNaN(actualNum) && !isNaN(forecastNum)) {
-                let diff = actualNum - forecastNum;
-                if (row.Correlation === 'Inverse') diff *= -1;
+    if (isInverse) {
+        diff = diff * -1; // Flips the math for the table colors
+    }
 
-                if (diff > 0) {
-                    resultClass = "bullish-text";
-                    effectLabel = "Bullish";
-                } else if (diff < 0) {
-                    resultClass = "bearish-text";
-                    effectLabel = "Bearish";
-                }
+    if (diff > 0) { 
+        resultClass = "bullish-text"; 
+        effectLabel = "Bullish"; 
+    } else if (diff < 0) { 
+        resultClass = "bearish-text"; 
+        effectLabel = "Bearish"; 
+    }
+}
             }
 
             const tr = document.createElement('tr');
