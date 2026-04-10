@@ -247,3 +247,98 @@ if (diff > 0) {
     // Setup Polling
     setInterval(fetchAndUpdate, REFRESH_RATE);
 });
+// --- LIVE TRADING CHART ANIMATION ---
+    // Wait for the DOM to be ready
+    setTimeout(() => {
+        const chartContainer = document.getElementById('tv-chart');
+        
+        // 1. Create the Chart with Macrolens Theme
+        const chart = LightweightCharts.createChart(chartContainer, {
+            width: chartContainer.clientWidth,
+            height: 350,
+            layout: {
+                background: { type: 'solid', color: 'transparent' }, // Makes it glassmorphism compatible
+                textColor: '#8b93a5',
+            },
+            grid: {
+                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+            },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
+            rightPriceScale: {
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+            },
+            timeScale: {
+                borderColor: 'rgba(255, 255, 255, 0.08)',
+                timeVisible: true,
+                secondsVisible: false,
+            },
+        });
+
+        // 2. Add Candlestick Series and sync colors with your CSS
+        const candlestickSeries = chart.addCandlestickSeries({
+            upColor: '#00e676',       // Bullish Green
+            downColor: '#ff3d57',     // Bearish Red
+            borderVisible: false,
+            wickUpColor: '#00e676',
+            wickDownColor: '#ff3d57',
+        });
+
+        // 3. Generate Historical Baseline Data
+        let currentTime = Math.floor(Date.now() / 1000) - (60 * 50); // Start 50 minutes ago
+        let currentPrice = 1.0850; // Starting price (e.g., EUR/USD)
+        const data = [];
+
+        for (let i = 0; i < 50; i++) {
+            const open = currentPrice;
+            const close = open + (Math.random() - 0.5) * 0.005;
+            const high = Math.max(open, close) + Math.random() * 0.002;
+            const low = Math.min(open, close) - Math.random() * 0.002;
+            
+            data.push({ time: currentTime, open, high, low, close });
+            
+            currentTime += 60; // Advance 1 minute
+            currentPrice = close;
+        }
+        candlestickSeries.setData(data);
+
+        // 4. The Real-Time Animation Loop (The "Ticker")
+        let currentBar = {
+            open: currentPrice,
+            high: currentPrice,
+            low: currentPrice,
+            close: currentPrice,
+            time: currentTime
+        };
+
+        setInterval(() => {
+            // Generate a small random price movement every 200ms
+            const tick = (Math.random() - 0.5) * 0.001; 
+            currentBar.close += tick;
+            currentBar.high = Math.max(currentBar.high, currentBar.close);
+            currentBar.low = Math.min(currentBar.low, currentBar.close);
+
+            // Update the chart to show the animation
+            candlestickSeries.update(currentBar);
+
+            // Every 60 ticks (roughly 12 seconds), spawn a new candle
+            if (Math.random() < 0.02) {
+                currentTime += 60;
+                currentBar = {
+                    open: currentBar.close,
+                    high: currentBar.close,
+                    low: currentBar.close,
+                    close: currentBar.close,
+                    time: currentTime
+                };
+            }
+        }, 200);
+
+        // Make chart responsive if window is resized
+        window.addEventListener('resize', () => {
+            chart.applyOptions({ width: chartContainer.clientWidth });
+        });
+
+    }, 500); // 500ms delay ensures the container is fully rendered before drawing
