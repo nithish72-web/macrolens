@@ -96,55 +96,106 @@ if (diff > 0) {
         meterFill.style.backgroundColor = meterColor;
     };
 
-    const renderTable = (data) => {
+  const renderTable = (data) => {
         heatmapBody.innerHTML = '';
         const showHighImpactOnly = toggleHighImpact.checked;
 
+        // 1. Define Category Keywords
+        const CATEGORIES = {
+            "Inflation & Prices": ["CPI", "PCE", "PPI", "Inflation"],
+            "Economic Growth & Activity": ["GDP", "PMI", "Retail", "Confidence", "Building", "Manufacturing", "Services"],
+            "Jobs & Employment": ["JOLTS", "ADP", "Non-Farm", "NFP", "Earnings", "Job", "Payroll"],
+            "Unemployment": ["Unemployment", "Claims"],
+            "Monetary Policy (Other)": ["Federal Funds", "Rate", "Monetary", "FOMC"]
+        };
+
+        // Helper function to sort indicator into category
+        const getCategory = (indicatorName) => {
+            const name = indicatorName.toLowerCase();
+            // Force Unemployment check first so it doesn't accidentally land in Jobs
+            if (name.includes('unemployment') || name.includes('claims')) return "Unemployment";
+
+            for (const [category, keywords] of Object.entries(CATEGORIES)) {
+                if (keywords.some(kw => name.includes(kw.toLowerCase()))) {
+                    return category;
+                }
+            }
+            return "Other Indicators";
+        };
+
+        // 2. Group Data by Category
+        const groupedData = {
+            "Inflation & Prices": [],
+            "Economic Growth & Activity": [],
+            "Jobs & Employment": [],
+            "Unemployment": [],
+            "Monetary Policy (Other)": [],
+            "Other Indicators": []
+        };
+
         data.forEach(row => {
             if (showHighImpactOnly && row.Impact !== 'High') return;
+            const cat = getCategory(row.Indicator);
+            if (groupedData[cat]) {
+                groupedData[cat].push(row);
+            }
+        });
 
-            const actualNum = parseEconomicValue(row.Actual);
-            const forecastNum = parseEconomicValue(row.Forecast);
+        // 3. Render Groups to Table
+        Object.keys(groupedData).forEach(category => {
+            const rowsInCategory = groupedData[category];
             
-            let resultClass = "neutral-text";
-            let effectLabel = "Neutral";
-// Inside renderTable(data), replace the difference logic with this:
+            // Skip rendering the category if it has no data
+            if (rowsInCategory.length === 0) return;
 
-if (!isNaN(actualNum) && !isNaN(forecastNum)) {
-    let diff = actualNum - forecastNum;
-    
-    // AUTOMATIC INVERSE LOGIC: Detects Unemployment or Claims
-    const isInverse = row.Correlation === 'Inverse' || 
-                      row.Indicator.toLowerCase().includes('unemployment') || 
-                      row.Indicator.toLowerCase().includes('claims');
+            // Create Category Header Row
+            const headerTr = document.createElement('tr');
+            headerTr.className = "category-row";
+            headerTr.innerHTML = `<td colspan="6">${category}</td>`;
+            heatmapBody.appendChild(headerTr);
 
-    if (isInverse) {
-        diff = diff * -1; // Flips the math for the table colors
-    }
+            // Create Indicator Rows
+            rowsInCategory.forEach(row => {
+                const actualNum = parseEconomicValue(row.Actual);
+                const forecastNum = parseEconomicValue(row.Forecast);
+                
+                let resultClass = "neutral-text";
+                let effectLabel = "Neutral";
 
-    if (diff > 0) { 
-        resultClass = "bullish-text"; 
-        effectLabel = "Bullish"; 
-    } else if (diff < 0) { 
-        resultClass = "bearish-text"; 
-        effectLabel = "Bearish"; 
-    }
-}
+                if (!isNaN(actualNum) && !isNaN(forecastNum)) {
+                    let diff = actualNum - forecastNum;
+                    
+                    // AUTOMATIC INVERSE LOGIC: Detects Unemployment or Claims
+                    const isInverse = row.Correlation === 'Inverse' || 
+                                      row.Indicator.toLowerCase().includes('unemployment') || 
+                                      row.Indicator.toLowerCase().includes('claims');
 
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="font-weight: 600;">${row.Indicator}</td>
-                <td><span class="impact-badge impact-${row.Impact.toLowerCase()}">${row.Impact}</span></td>
-                <td style="color: var(--text-muted)">${row.Previous}</td>
-                <td>${row.Forecast}</td>
-                <td class="${resultClass}" style="font-weight: 800;">${row.Actual}</td>
-                <td class="${resultClass}">${effectLabel}</td>
-            `;
-            heatmapBody.appendChild(tr);
+                    if (isInverse) {
+                        diff = diff * -1; // Flips the math
+                    }
+
+                    if (diff > 0) { 
+                        resultClass = "bullish-text"; 
+                        effectLabel = "Bullish"; 
+                    } else if (diff < 0) { 
+                        resultClass = "bearish-text"; 
+                        effectLabel = "Bearish"; 
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-weight: 600; padding-left: 2rem;">${row.Indicator}</td>
+                    <td><span class="impact-badge impact-${row.Impact.toLowerCase()}">${row.Impact}</span></td>
+                    <td style="color: var(--text-muted)">${row.Previous}</td>
+                    <td>${row.Forecast}</td>
+                    <td class="${resultClass}" style="font-weight: 800;">${row.Actual}</td>
+                    <td class="${resultClass}">${effectLabel}</td>
+                `;
+                heatmapBody.appendChild(tr);
+            });
         });
     };
-
-    // --- Data Fetching & Parsing ---
 
     const parseCSV = (text) => {
         const lines = text.trim().split('\n');
