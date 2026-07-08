@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const CSV_URL = 'data.csv'; // Update this to your raw GitHub/server URL in production
-    const REFRESH_RATE = 15000; // 15 seconds
+    // --- AUTOMATION SETUP ---
+    const FINNHUB_API_KEY = 'd96st01r01qr77dlpns0d96st01r01qr77dlpnsg'; // Replace with your actual Finnhub Token
+    const REFRESH_RATE = 60000; // Updated to 1 minute to avoid hitting free API tier rate limits
 
     const heatmapBody = document.getElementById('heatmap-body');
     const biasText = document.getElementById('bias-text');
@@ -12,15 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Core Logic ---
 
-    // Utility: Parse numbers from strings like "250K", "3.5%"
-    const parseEconomicValue = (str) => {
-        if (!str) return 0;
-        // Strip everything except digits, decimals, and minus signs
-        const cleaned = str.replace(/[^\d.-]/g, '');
+    // Utility: Safely extract floats from data values if returned as strings
+    const parseEconomicValue = (val) => {
+        if (val === null || val === undefined) return NaN;
+        if (typeof val === 'number') return val;
+        const cleaned = val.replace(/[^\d.-]/g, '');
         return parseFloat(cleaned);
     };
 
-    // Calculate Bias Engine Score
+    // Calculate Bias Engine Score using Finnhub variables
     const calculateBias = (data) => {
         let totalScore = 0;
         let maxPossibleScore = 0;
@@ -29,32 +30,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const actual = parseEconomicValue(row.Actual);
             const forecast = parseEconomicValue(row.Forecast);
             
-            // Skip calculation if data is incomplete
+            // Skip calculation if data is incomplete or indicator hasn't released yet
             if (isNaN(actual) || isNaN(forecast)) return;
 
-            // Determine weight
+            // Determine weight based on importance
             let weight = 1;
             if (row.Impact === 'High') weight = 3;
             if (row.Impact === 'Medium') weight = 2;
             
             maxPossibleScore += weight;
 
-let diff = actual - forecast;
+            let diff = actual - forecast;
 
-// AUTOMATIC INVERSE LOGIC: Detects Unemployment or Claims
-const isInverse = row.Correlation === 'Inverse' || 
-                  row.Indicator.toLowerCase().includes('unemployment') || 
-                  row.Indicator.toLowerCase().includes('claims');
+            // AUTOMATIC INVERSE LOGIC: Detects Unemployment or Claims
+            const isInverse = row.Indicator.toLowerCase().includes('unemployment') || 
+                              row.Indicator.toLowerCase().includes('claims');
 
-if (isInverse) {
-    diff = diff * -1; // Flips the math: Higher actual now results in a negative (Bearish) number
-}
+            if (isInverse) {
+                diff = diff * -1; // Flips the math: Higher actual returns a negative (Bearish) number
+            }
 
-if (diff > 0) {
-    totalScore += weight; // Bullish
-} else if (diff < 0) {
-    totalScore -= weight; // Bearish
-}
+            if (diff > 0) {
+                totalScore += weight; // Bullish
+            } else if (diff < 0) {
+                totalScore -= weight; // Bearish
+            }
         });
 
         // Normalize score between -100 and +100
@@ -96,7 +96,7 @@ if (diff > 0) {
         meterFill.style.backgroundColor = meterColor;
     };
 
-  const renderTable = (data) => {
+    const renderTable = (data) => {
         heatmapBody.innerHTML = '';
         const showHighImpactOnly = toggleHighImpact.checked;
 
@@ -112,7 +112,6 @@ if (diff > 0) {
         // Helper function to sort indicator into category
         const getCategory = (indicatorName) => {
             const name = indicatorName.toLowerCase();
-            // Force Unemployment check first so it doesn't accidentally land in Jobs
             if (name.includes('unemployment') || name.includes('claims')) return "Unemployment";
 
             for (const [category, keywords] of Object.entries(CATEGORIES)) {
@@ -165,9 +164,7 @@ if (diff > 0) {
                 if (!isNaN(actualNum) && !isNaN(forecastNum)) {
                     let diff = actualNum - forecastNum;
                     
-                    // AUTOMATIC INVERSE LOGIC: Detects Unemployment or Claims
-                    const isInverse = row.Correlation === 'Inverse' || 
-                                      row.Indicator.toLowerCase().includes('unemployment') || 
+                    const isInverse = row.Indicator.toLowerCase().includes('unemployment') || 
                                       row.Indicator.toLowerCase().includes('claims');
 
                     if (isInverse) {
@@ -187,9 +184,9 @@ if (diff > 0) {
                 tr.innerHTML = `
                     <td style="font-weight: 600; padding-left: 2rem;">${row.Indicator}</td>
                     <td><span class="impact-badge impact-${row.Impact.toLowerCase()}">${row.Impact}</span></td>
-                    <td style="color: var(--text-muted)">${row.Previous}</td>
-                    <td>${row.Forecast}</td>
-                    <td class="${resultClass}" style="font-weight: 800;">${row.Actual}</td>
+                    <td style="color: var(--text-muted)">${row.Previous !== null ? row.Previous : '-'}</td>
+                    <td>${row.Forecast !== null ? row.Forecast : '-'}</td>
+                    <td class="${resultClass}" style="font-weight: 800;">${row.Actual !== null ? row.Actual : 'Pending'}</td>
                     <td class="${resultClass}">${effectLabel}</td>
                 `;
                 heatmapBody.appendChild(tr);
@@ -197,32 +194,43 @@ if (diff > 0) {
         });
     };
 
-    const parseCSV = (text) => {
-        const lines = text.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim());
-        const data = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            const values = lines[i].split(',').map(v => v.trim());
-            if (values.length === headers.length) {
-                let row = {};
-                headers.forEach((header, index) => {
-                    row[header] = values[index];
-                });
-                data.push(row);
-            }
-        }
-        return data;
-    };
-
+    // --- REPLACED CSV LOGIC WITH RAW FINNHUB OBJECT MAPPING ---
     const fetchAndUpdate = async () => {
         try {
-            // Add cache-busting query param to ensure fresh data fetch
-            const response = await fetch(`${CSV_URL}?t=${new Date().getTime()}`);
-            if (!response.ok) throw new Error('Data fetch failed');
+            // Create data window pulling calendar data from 10 days ago to today
+            const today = new Date().toISOString().split('T')[0];
+            const backTime = new Date();
+            backTime.setDate(backTime.getDate() - 10);
+            const startDate = backTime.toISOString().split('T')[0];
+
+            const url = `https://finnhub.io/api/v1/calendar/economic?from=${startDate}&to=${today}&token=${FINNHUB_API_KEY}`;
             
-            const csvText = await response.text();
-            globalData = parseCSV(csvText);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('API fetch failed');
+            
+            const data = await response.json();
+            
+            if (!data.economicCalendar) {
+                throw new Error("Invalid structure returned from Finnhub");
+            }
+
+            // Filter down directly into USD indicators and map them into the structures expected by your renderer
+            globalData = data.economicCalendar
+                .filter(item => item.country === 'US')
+                .map(item => {
+                    // Match Finnhub strings to your UI impact values
+                    let uiImpact = "Low";
+                    if (item.impact === 'high') uiImpact = "High";
+                    else if (item.impact === 'medium') uiImpact = "Medium";
+
+                    return {
+                        Indicator: item.event,
+                        Impact: uiImpact,
+                        Previous: item.prev,
+                        Forecast: item.forecast,
+                        Actual: item.actual
+                    };
+                });
             
             renderTable(globalData);
             calculateBias(globalData);
@@ -231,14 +239,13 @@ if (diff > 0) {
             timestampEl.textContent = `Last Updated: ${now.toLocaleTimeString()}`;
             
         } catch (error) {
-            console.error("Error loading CSV:", error);
+            console.error("Error running live tracking automation:", error);
             biasText.textContent = "Data Error";
             biasText.className = "bearish-text";
         }
     };
 
     // --- Initialization ---
-    
     toggleHighImpact.addEventListener('change', () => renderTable(globalData));
 
     // Initial Fetch
@@ -247,98 +254,91 @@ if (diff > 0) {
     // Setup Polling
     setInterval(fetchAndUpdate, REFRESH_RATE);
 });
+
 // --- LIVE TRADING CHART ANIMATION ---
-    // Wait for the DOM to be ready
-    setTimeout(() => {
-        const chartContainer = document.getElementById('tv-chart');
+setTimeout(() => {
+    const chartContainer = document.getElementById('tv-chart');
+    if (!chartContainer) return;
+    
+    const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: 350,
+        layout: {
+            background: { type: 'solid', color: 'transparent' },
+            textColor: '#8b93a5',
+        },
+        grid: {
+            vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
+            horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+        rightPriceScale: {
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+        },
+        timeScale: {
+            borderColor: 'rgba(255, 255, 255, 0.08)',
+            timeVisible: true,
+            secondsVisible: false,
+        },
+    });
+
+    const candlestickSeries = chart.addCandlestickSeries({
+        upColor: '#00e676',
+        downColor: '#ff3d57',
+        borderVisible: false,
+        wickUpColor: '#00e676',
+        wickDownColor: '#ff3d57',
+    });
+
+    let currentTime = Math.floor(Date.now() / 1000) - (60 * 50);
+    let currentPrice = 1.0850;
+    const data = [];
+
+    for (let i = 0; i < 50; i++) {
+        const open = currentPrice;
+        const close = open + (Math.random() - 0.5) * 0.005;
+        const high = Math.max(open, close) + Math.random() * 0.002;
+        const low = Math.min(open, close) - Math.random() * 0.002;
         
-        // 1. Create the Chart with Macrolens Theme
-        const chart = LightweightCharts.createChart(chartContainer, {
-            width: chartContainer.clientWidth,
-            height: 350,
-            layout: {
-                background: { type: 'solid', color: 'transparent' }, // Makes it glassmorphism compatible
-                textColor: '#8b93a5',
-            },
-            grid: {
-                vertLines: { color: 'rgba(255, 255, 255, 0.05)' },
-                horzLines: { color: 'rgba(255, 255, 255, 0.05)' },
-            },
-            crosshair: {
-                mode: LightweightCharts.CrosshairMode.Normal,
-            },
-            rightPriceScale: {
-                borderColor: 'rgba(255, 255, 255, 0.08)',
-            },
-            timeScale: {
-                borderColor: 'rgba(255, 255, 255, 0.08)',
-                timeVisible: true,
-                secondsVisible: false,
-            },
-        });
+        data.push({ time: currentTime, open, high, low, close });
+        
+        currentTime += 60;
+        currentPrice = close;
+    }
+    candlestickSeries.setData(data);
 
-        // 2. Add Candlestick Series and sync colors with your CSS
-        const candlestickSeries = chart.addCandlestickSeries({
-            upColor: '#00e676',       // Bullish Green
-            downColor: '#ff3d57',     // Bearish Red
-            borderVisible: false,
-            wickUpColor: '#00e676',
-            wickDownColor: '#ff3d57',
-        });
+    let currentBar = {
+        open: currentPrice,
+        high: currentPrice,
+        low: currentPrice,
+        close: currentPrice,
+        time: currentTime
+    };
 
-        // 3. Generate Historical Baseline Data
-        let currentTime = Math.floor(Date.now() / 1000) - (60 * 50); // Start 50 minutes ago
-        let currentPrice = 1.0850; // Starting price (e.g., EUR/USD)
-        const data = [];
+    setInterval(() => {
+        const tick = (Math.random() - 0.5) * 0.001; 
+        currentBar.close += tick;
+        currentBar.high = Math.max(currentBar.high, currentBar.close);
+        currentBar.low = Math.min(currentBar.low, currentBar.close);
 
-        for (let i = 0; i < 50; i++) {
-            const open = currentPrice;
-            const close = open + (Math.random() - 0.5) * 0.005;
-            const high = Math.max(open, close) + Math.random() * 0.002;
-            const low = Math.min(open, close) - Math.random() * 0.002;
-            
-            data.push({ time: currentTime, open, high, low, close });
-            
-            currentTime += 60; // Advance 1 minute
-            currentPrice = close;
+        candlestickSeries.update(currentBar);
+
+        if (Math.random() < 0.02) {
+            currentTime += 60;
+            currentBar = {
+                open: currentBar.close,
+                high: currentBar.close,
+                low: currentBar.close,
+                close: currentBar.close,
+                time: currentTime
+            };
         }
-        candlestickSeries.setData(data);
+    }, 200);
 
-        // 4. The Real-Time Animation Loop (The "Ticker")
-        let currentBar = {
-            open: currentPrice,
-            high: currentPrice,
-            low: currentPrice,
-            close: currentPrice,
-            time: currentTime
-        };
+    window.addEventListener('resize', () => {
+        chart.applyOptions({ width: chartContainer.clientWidth });
+    });
 
-        setInterval(() => {
-            // Generate a small random price movement every 200ms
-            const tick = (Math.random() - 0.5) * 0.001; 
-            currentBar.close += tick;
-            currentBar.high = Math.max(currentBar.high, currentBar.close);
-            currentBar.low = Math.min(currentBar.low, currentBar.close);
-
-            // Update the chart to show the animation
-            candlestickSeries.update(currentBar);
-
-            // Every 60 ticks (roughly 12 seconds), spawn a new candle
-            if (Math.random() < 0.02) {
-                currentTime += 60;
-                currentBar = {
-                    open: currentBar.close,
-                    high: currentBar.close,
-                    low: currentBar.close,
-                    close: currentBar.close,
-                    time: currentTime
-                };
-            }
-        }, 200);
-
-        // Make chart responsive if window is resized
-        window.addEventListener('resize', () => {
-            chart.applyOptions({ width: chartContainer.clientWidth });
-        });
-
-    }, 500); // 500ms delay ensures the container is fully rendered before drawing
+}, 500);
