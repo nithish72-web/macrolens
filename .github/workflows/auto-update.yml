@@ -3,13 +3,13 @@ name: Automated Macro Calendar Sync
 on:
   push:
     branches:
-      - main     # Runs automatically every time you push code changes
+      - main
   schedule:
-    - cron: '0 0 * * *' # Runs automatically every single day at midnight
-  workflow_dispatch: # Adds a manual "Run workflow" button inside your GitHub dashboard
+    - cron: '0 8 * * *' # Runs automatically every day at 8 AM UTC
+  workflow_dispatch: # Allows you to manually click "Run workflow" anytime
 
 permissions:
-  contents: write  # Grants full write permissions to save data.csv
+  contents: write
 
 jobs:
   update-data:
@@ -23,61 +23,91 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Generate Fresh Macro Data
+      - name: Install Request Dependencies
+        run: pip install requests
+
+      - name: Fetch Live Economic Calendar Data
+        env:
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }} # Injects your hidden key securely
         run: |
           python3 - <<EOF
+          import os
           import csv
-          import random
+          import requests
+          from datetime import datetime, timedelta
 
-          # Define the columns matching your exact JavaScript code targets
-          headers = ["Indicator", "Impact", "Previous", "Forecast", "Actual", "Correlation"]
-          
-          # Complete real-world macro indicators matching all your frontend filter categories
-          data = [
-              # --- Inflation & Prices ---
-              ["Core CPI (YoY)", "High", "3.2%", "3.1%", f"{round(random.uniform(2.9, 3.4), 1)}%", "Normal"],
-              ["Core PCE Price Index (MoM)", "High", "0.2%", "0.2%", f"{round(random.uniform(0.1, 0.3), 1)}%", "Normal"],
-              ["PPI (MoM)", "Medium", "0.1%", "0.2%", f"{round(random.uniform(-0.1, 0.4), 1)}%", "Normal"],
-              ["CPI (MoM)", "High", "0.3%", "0.2%", f"{round(random.uniform(0.1, 0.4), 1)}%", "Normal"],
-              
-              # --- Economic Growth & Activity ---
-              ["GDP (Annualized QoQ)", "High", "2.5%", "2.3%", f"{round(random.uniform(2.0, 2.8), 1)}%", "Normal"],
-              ["Flash Services PMI", "Medium", "51.3", "51.5", f"{round(random.uniform(49.5, 53.0), 1)}", "Normal"],
-              ["ISM Manufacturing PMI", "High", "48.5", "49.0", f"{round(random.uniform(47.0, 51.5), 1)}", "Normal"],
-              ["Retail Sales (MoM)", "Medium", "0.4%", "0.3%", f"{round(random.uniform(-0.1, 0.6), 1)}%", "Normal"],
-              ["CB Consumer Confidence", "Medium", "104.0", "105.5", f"{round(random.uniform(100.0, 110.0), 1)}", "Normal"],
-              ["Building Permits", "Low", "1.42M", "1.45M", f"{round(random.uniform(1.35, 1.50), 2)}M", "Normal"],
-              
-              # --- Jobs & Employment ---
-              ["Non-Farm Payrolls (NFP)", "High", "175K", "160K", f"{random.randint(140, 195)}K", "Normal"],
-              ["JOLTS Job Openings", "Medium", "8.55M", "8.40M", f"{round(random.uniform(8.20, 8.80), 2)}M", "Normal"],
-              ["ADP Non-Farm Employment Change", "Medium", "155K", "150K", f"{random.randint(130, 170)}K", "Normal"],
-              ["Average Hourly Earnings (MoM)", "High", "0.3%", "0.3%", f"{round(random.uniform(0.1, 0.5), 1)}%", "Normal"],
-              
-              # --- Unemployment ---
-              ["Unemployment Rate", "High", "3.9%", "3.8%", f"{round(random.uniform(3.7, 4.1), 1)}%", "Inverse"],
-              ["Initial Jobless Claims", "Medium", "210K", "215K", f"{random.randint(200, 225)}K", "Inverse"],
-              
-              # --- Monetary Policy (Other) ---
-              ["Federal Funds Rate", "High", "5.50%", "5.50%", f"{random.choice(['5.25%', '5.50%', '5.75%'])}", "Normal"],
-              ["FOMC Rate Decision", "High", "5.50%", "5.50%", "5.50%", "Normal"],
-              
-              # --- Other Indicators ---
-              ["Empire State Manufacturing Index", "Low", "-14.3", "-11.0", f"{round(random.uniform(-20.0, 5.0), 1)}", "Normal"]
-          ]
+          api_key = os.environ.get('FMP_API_KEY')
+          if not api_key:
+              print("Error: FMP_API_KEY secret is missing!")
+              exit(1)
 
-          # Write out the complete dataset into your CSV structure
-          with open('data.csv', 'w', newline='') as file:
-              writer = csv.writer(file)
-              writer.writerow(headers)
-              writer.writerows(data)
+          # Calculate a 14-day tracking window (from 7 days ago to 7 days ahead)
+          today = datetime.now()
+          start_date = (today - timedelta(days=7)).strftime('%Y-%m-%d')
+          end_date = (today + timedelta(days=7)).strftime('%Y-%m-%d')
+
+          url = f"https://financialmodelingprep.com/api/v3/economic_calendar?from={start_date}&to={end_date}&apikey={api_key}"
           
-          print("Successfully expanded data metrics framework.")
+          try:
+              response = requests.get(url)
+              events = response.json()
+              
+              if not isinstance(events, list):
+                  print("Failed to pull standard array structure from endpoint.")
+                  exit(1)
+
+              headers = ["Indicator", "Impact", "Previous", "Forecast", "Actual", "Correlation"]
+              csv_rows = []
+
+              for item in events:
+                  # Filter strictly for United States macroeconomic indicators
+                  if item.get('country') != 'US':
+                      continue
+
+                  event_name = item.get('event', '')
+                  
+                  # Keep only the high-impact core market movers matching your JS keywords
+                  keywords = ['CPI', 'PCE', 'GDP', 'Payrolls', 'Unemployment', 'PMI', 'Retail', 'Claims', 'FOMC', 'Funds Rate']
+                  if not any(kw in event_name for kw in keywords):
+                      continue
+
+                  # Clean and format Impact labels
+                  raw_impact = str(item.get('impact', '')).upper()
+                  ui_impact = "Low"
+                  if "HIGH" in raw_impact or "3" in raw_impact: ui_impact = "High"
+                  elif "MEDIUM" in raw_impact or "MODERATE" in raw_impact or "2" in raw_impact: ui_impact = "Medium"
+
+                  # Extract data parameters safely
+                  actual = item.get('actual')
+                  forecast = item.get('consensus') # Consensus acts as the macro forecast target
+                  previous = item.get('previous')
+
+                  # Standardize string representations for your JS float parsing loops
+                  act_str = str(actual) if actual is not None else ""
+                  for_str = str(forecast) if forecast is not None else ""
+                  prev_str = str(previous) if previous is not None else ""
+
+                  # Determine economic correlation rules dynamically
+                  name_lower = event_name.lower()
+                  correlation = "Inverse" if ("unemployment" in name_lower or "claims" in name_lower) else "Normal"
+
+                  csv_rows.append([event_name, ui_impact, prev_str, for_str, act_str, correlation])
+
+              # Save the authentic live macro metrics straight into your dashboard file
+              with open('data.csv', 'w', newline='', encoding='utf-8') as file:
+                  writer = csv.writer(file)
+                  writer.writerow(headers)
+                  writer.writerows(csv_rows)
+
+              print(f"Successfully sync'd {len(csv_rows)} authentic live macro metrics into data.csv")
+
+          except Exception as e:
+              print(f"Operational breakdown: {e}")
+              exit(1)
           EOF
 
-      # Safely commit updates back down to your dashboard setup
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Automated Sync: Populated full macro index suite [skip ci]"
+          commit_message: "Automated Live Data Sync [skip ci]"
           file_pattern: 'data.csv'
