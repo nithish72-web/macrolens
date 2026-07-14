@@ -5,8 +5,9 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 8 * * *' # Runs automatically every day at 8 AM UTC
-  workflow_dispatch: # Allows you to manually click "Run workflow" anytime
+    # Runs automatically every 4 hours to catch live updates when metrics drop
+    - cron: '0 */4 * * *' 
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,91 +24,61 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Request Dependencies
-        run: pip install requests
-
-      - name: Fetch Live Economic Calendar Data
-        env:
-          FMP_API_KEY: ${{ secrets.FMP_API_KEY }} # Injects your hidden key securely
+      - name: Fetch Live Keyless Data (Forex Factory)
         run: |
           python3 - <<EOF
-          import os
+          import urllib.request
+          import json
           import csv
-          import requests
-          from datetime import datetime, timedelta
 
-          api_key = os.environ.get('FMP_API_KEY')
-          if not api_key:
-              print("Error: FMP_API_KEY secret is missing!")
-              exit(1)
-
-          # Calculate a 14-day tracking window (from 7 days ago to 7 days ahead)
-          today = datetime.now()
-          start_date = (today - timedelta(days=7)).strftime('%Y-%m-%d')
-          end_date = (today + timedelta(days=7)).strftime('%Y-%m-%d')
-
-          url = f"https://financialmodelingprep.com/api/v3/economic_calendar?from={start_date}&to={end_date}&apikey={api_key}"
+          # The institutional standard free public feed (No API Key needed)
+          url = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+          
+          # Use a standard browser header to connect cleanly
+          req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
           
           try:
-              response = requests.get(url)
-              events = response.json()
+              response = urllib.request.urlopen(req)
+              events = json.loads(response.read().decode())
               
-              if not isinstance(events, list):
-                  print("Failed to pull standard array structure from endpoint.")
-                  exit(1)
-
               headers = ["Indicator", "Impact", "Previous", "Forecast", "Actual", "Correlation"]
               csv_rows = []
-
+              
               for item in events:
-                  # Filter strictly for United States macroeconomic indicators
-                  if item.get('country') != 'US':
+                  # We only care about United States Dollar (USD) metrics
+                  if item.get('country') != 'USD':
                       continue
-
-                  event_name = item.get('event', '')
+                      
+                  title = item.get('title', '')
+                  impact = item.get('impact', '').capitalize()
                   
-                  # Keep only the high-impact core market movers matching your JS keywords
-                  keywords = ['CPI', 'PCE', 'GDP', 'Payrolls', 'Unemployment', 'PMI', 'Retail', 'Claims', 'FOMC', 'Funds Rate']
-                  if not any(kw in event_name for kw in keywords):
+                  # Keep the dashboard clean by only tracking High and Medium impact events
+                  if impact not in ["High", "Medium"]:
                       continue
-
-                  # Clean and format Impact labels
-                  raw_impact = str(item.get('impact', '')).upper()
-                  ui_impact = "Low"
-                  if "HIGH" in raw_impact or "3" in raw_impact: ui_impact = "High"
-                  elif "MEDIUM" in raw_impact or "MODERATE" in raw_impact or "2" in raw_impact: ui_impact = "Medium"
-
-                  # Extract data parameters safely
-                  actual = item.get('actual')
-                  forecast = item.get('consensus') # Consensus acts as the macro forecast target
-                  previous = item.get('previous')
-
-                  # Standardize string representations for your JS float parsing loops
-                  act_str = str(actual) if actual is not None else ""
-                  for_str = str(forecast) if forecast is not None else ""
-                  prev_str = str(previous) if previous is not None else ""
-
-                  # Determine economic correlation rules dynamically
-                  name_lower = event_name.lower()
-                  correlation = "Inverse" if ("unemployment" in name_lower or "claims" in name_lower) else "Normal"
-
-                  csv_rows.append([event_name, ui_impact, prev_str, for_str, act_str, correlation])
-
-              # Save the authentic live macro metrics straight into your dashboard file
-              with open('data.csv', 'w', newline='', encoding='utf-8') as file:
-                  writer = csv.writer(file)
+                      
+                  actual = item.get('actual', '') or ""
+                  forecast = item.get('forecast', '') or ""
+                  previous = item.get('previous', '') or ""
+                  
+                  # Check for inverse metrics automatically (e.g., Jobless Claims)
+                  correlation = "Inverse" if ("unemployment" in title.lower() or "claims" in title.lower()) else "Normal"
+                  
+                  csv_rows.append([title, impact, previous, forecast, actual, correlation])
+                  
+              with open('data.csv', 'w', newline='', encoding='utf-8') as f:
+                  writer = csv.writer(f)
                   writer.writerow(headers)
                   writer.writerows(csv_rows)
-
-              print(f"Successfully sync'd {len(csv_rows)} authentic live macro metrics into data.csv")
-
+                  
+              print(f"Success! Downloaded {len(csv_rows)} live metrics without any API keys.")
+              
           except Exception as e:
-              print(f"Operational breakdown: {e}")
+              print(f"Data sync failed: {e}")
               exit(1)
           EOF
 
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Automated Live Data Sync [skip ci]"
+          commit_message: "Automated Live Data Sync (Keyless) [skip ci]"
           file_pattern: 'data.csv'
