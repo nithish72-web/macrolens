@@ -1,20 +1,15 @@
 Indicator,Impact,Previous,Forecast,Actual,Correlation
-Core CPI (YoY),High,3.2%,3.1%,2.9%,Normal
-Core PCE Price Index (MoM),High,0.2%,0.2%,0.1%,Normal
-PPI (MoM),Medium,0.1%,0.2%,0.2%,Normal
-CPI (MoM),High,0.3%,0.2%,0.2%,Normal
-GDP (Annualized QoQ),High,2.5%,2.3%,2.5%,Normal
-Flash Services PMI,Medium,51.3,51.5,51.4,Normal
-ISM Manufacturing PMI,High,48.5,49.0,47.0,Normal
-Retail Sales (MoM),Medium,0.4%,0.3%,0.2%,Normal
-CB Consumer Confidence,Medium,104.0,105.5,109.2,Normal
-Building Permits,Low,1.42M,1.45M,1.42M,Normal
-Non-Farm Payrolls (NFP),High,175K,160K,164K,Normal
-JOLTS Job Openings,Medium,8.55M,8.40M,8.4M,Normal
-ADP Non-Farm Employment Change,Medium,155K,150K,135K,Normal
-Average Hourly Earnings (MoM),High,0.3%,0.3%,0.4%,Normal
-Unemployment Rate,High,3.9%,3.8%,3.9%,Inverse
-Initial Jobless Claims,Medium,210K,215K,206K,Inverse
-Federal Funds Rate,High,5.50%,5.50%,5.75%,Normal
-FOMC Rate Decision,High,5.50%,5.50%,5.50%,Normal
-Empire State Manufacturing Index,Low,-14.3,-11.0,-11.1,Normal
+Core CPI m/m,High,0.2%,0.2%,,Normal
+Core CPI y/y,High,2.9%,2.8%,,Normal
+CPI m/m,High,0.5%,-0.1%,,Normal
+CPI y/y,High,4.2%,3.8%,,Normal
+Fed Chairman Warsh Testifies,High,,,,Normal
+Core PPI m/m,High,0.4%,0.4%,,Normal
+PPI m/m,High,1.1%,0.0%,,Normal
+Fed Chairman Warsh Testifies,High,,,,Normal
+Core Retail Sales m/m,Medium,0.8%,0.0%,,Normal
+Philly Fed Manufacturing Index,Medium,10.3,12.7,,Normal
+Retail Sales m/m,Medium,0.9%,0.2%,,Normal
+Unemployment Claims,Medium,215K,216K,,Inverse
+Prelim UoM Consumer Sentiment,Medium,48.9,51.0,,Normal
+Prelim UoM Inflation Expectations,Medium,4.6%,,,Normal
