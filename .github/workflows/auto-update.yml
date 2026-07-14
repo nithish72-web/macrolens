@@ -8,9 +8,8 @@ on:
     - cron: '0 0 * * *' # Runs automatically every single day at midnight
   workflow_dispatch: # Adds a manual "Run workflow" button inside your GitHub dashboard
 
-# Explicitly force write permissions for this script
 permissions:
-  contents: write
+  contents: write  # Grants full write permissions to save data.csv
 
 jobs:
   update-data:
@@ -22,14 +21,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-numeric: '3.10'
+          python-version: '3.10' # Fixed the typo here
 
       - name: Generate Fresh Macro Data
         run: |
-          python - <<EOF
+          python3 - <<EOF
           import csv
           import random
-          from datetime import datetime
 
           # Define the columns matching your exact JavaScript code targets
           headers = ["Indicator", "Impact", "Previous", "Forecast", "Actual", "Correlation"]
@@ -46,7 +44,7 @@ jobs:
               ["Retail Sales (MoM)", "Medium", "0.4%", "0.3%", f"{round(random.uniform(-0.1, 0.6), 1)}%", "Normal"]
           ]
 
-          # Write clean, standard rows directly into your data file
+          # Write clean rows directly into data.csv
           with open('data.csv', 'w', newline='') as file:
               writer = csv.writer(file)
               writer.writerow(headers)
@@ -55,18 +53,9 @@ jobs:
           print("Successfully compiled automated macro parameters into data.csv")
           EOF
 
+      # Uses a specialized action to safely commit the file changes without git syntax issues
       - name: Commit and Push Changes
-        run: |
-          git config --global user.name "Macrolens Automation"
-          git config --global user.email "bot@macrolens.io"
-          
-          # Only pull changes if the repo updated while this job ran
-          git pull origin main --rebase
-          
-          git add data.csv
-          if ! git diff --cached --quiet; then
-            git commit -m "Automated Sync: Updated live macroeconomic metrics [skip ci]"
-            git push origin main
-          else
-            echo "No variations found in macro parameters today."
-          fi
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated Sync: Updated live macroeconomic metrics [skip ci]"
+          file_pattern: 'data.csv'
