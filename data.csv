@@ -1,16 +1,24 @@
-Indicator,Impact,Previous,Forecast,Actual,Correlation
-Core CPI m/m,High,0.2%,0.2%,,Normal
-Core CPI y/y,High,2.9%,2.8%,,Normal
-CPI m/m,High,0.5%,-0.1%,,Normal
-CPI y/y,High,4.2%,3.8%,,Normal
-Fed Chairman Warsh Testifies,High,,,,Normal
-Core PPI m/m,High,0.4%,0.3%,,Normal
-PPI m/m,High,1.1%,0.0%,,Normal
-Fed Chairman Warsh Testifies,High,,,,Normal
-Core Retail Sales m/m,Medium,0.8%,0.0%,,Normal
-Philly Fed Manufacturing Index,Medium,10.3,12.7,,Normal
-Retail Sales m/m,Medium,0.9%,0.2%,,Normal
-Unemployment Claims,Medium,215K,216K,,Inverse
-President Trump Speaks,Medium,,,,Normal
-Prelim UoM Consumer Sentiment,Medium,48.9,51.0,,Normal
-Prelim UoM Inflation Expectations,Medium,4.6%,,,Normal
+Indicator,Actual,Forecast,Previous,Impact,Correlation
+Core CPI m/m,0.2%,0.3%,0.4%,High,Positive
+Core CPI y/y,2.9%,2.9%,2.8%,High,Positive
+CPI m/m,0.5%,0.5%,0.6%,High,Positive
+CPI y/y,4.2%,4.2%,3.8%,High,Positive
+Final GDP q/q,2.1%,1.6%,1.6%,High,Negative
+Core PCE Price Index m/m,0.3%,0.3%,0.3%,High,Positive
+Prelim GDP q/q,0.7%,1.4%,1.4%,High,Positive
+Core PPI m/m,0.4%,0.5%,0.7%,High,Positive
+PPI m/m,1.1%,0.7%,1.1%,High,Positive
+Federal Funds Rate,3.75%,3.75%,3.75%,High,Positive
+Advance GDP q/q,2.0%,2.2%,0.5%,High,Negative
+Flash Manufacturing PMI,52.4,51.5,51.6,High,Positive
+Flash Services PMI,51.1,52.0,51.7,High,Positive
+JOLTS Job Openings,6.88M,6.89M,7.24M,High,Positive
+ADP Non-Farm Employment Change,122K,118K,105K,High,Positive
+Core Retail Sales m/m,0.5%,0.3%,0.0%,High,Positive
+Retail Sales m/m,0.6%,0.5%,-0.1%,High,Positive
+ISM Manufacturing PMI,54.0,53.3,52.7,High,Positive
+Unemployment Claims,202K,212K,211K,High,Negative
+Average Hourly Earnings m/m,0.3%,0.3%,0.2%,High,Positive
+Non-Farm Employment Change,172K,85K,179K,High,Positive
+Unemployment Rate,4.3%,4.3%,4.3%,High,Negative
+ISM Services PMI,54.5,53.7,53.6,High,Positive (cheak wheather all these datas are latest)
