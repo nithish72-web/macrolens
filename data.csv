@@ -1,8 +1,8 @@
 Indicator,Actual,Forecast,Previous,Impact,Correlation
-Core CPI m/m,0.2%,0.3%,0.4%,High,Positive
-Core CPI y/y,2.9%,2.9%,2.8%,High,Positive
-CPI m/m,0.5%,0.5%,0.6%,High,Positive
-CPI y/y,4.2%,4.2%,3.8%,High,Positive
+Core CPI m/m,0.0%,0.2%,0.2%,High,Positive
+Core CPI y/y,2.6%,2.8%,2.9%,High,Positive
+CPI m/m,-0.4%,-0.1%,0.5%,High,Positive
+CPI y/y,3.5%,3.8%,4.2%,High,Positive
 Final GDP q/q,2.1%,1.6%,1.6%,High,Negative
 Core PCE Price Index m/m,0.3%,0.3%,0.3%,High,Positive
 Prelim GDP q/q,0.7%,1.4%,1.4%,High,Positive
@@ -16,9 +16,9 @@ JOLTS Job Openings,6.88M,6.89M,7.24M,High,Positive
 ADP Non-Farm Employment Change,122K,118K,105K,High,Positive
 Core Retail Sales m/m,0.5%,0.3%,0.0%,High,Positive
 Retail Sales m/m,0.6%,0.5%,-0.1%,High,Positive
-ISM Manufacturing PMI,54.0,53.3,52.7,High,Positive
+ISM Manufacturing PMI,53.3,53.8,54.0,High,Positive
 Unemployment Claims,202K,212K,211K,High,Negative
-Average Hourly Earnings m/m,0.3%,0.3%,0.2%,High,Positive
-Non-Farm Employment Change,172K,85K,179K,High,Positive
-Unemployment Rate,4.3%,4.3%,4.3%,High,Negative
-ISM Services PMI,54.5,53.7,53.6,High,Positive (cheak wheather all these datas are latest)
+Average Hourly Earnings m/m,0.3%,0.3%,0.3%,High,Positive
+Non-Farm Employment Change,57K,114K,129K,High,Positive
+Unemployment Rate,4.2%,4.3%,4.3%,High,Negative
+ISM Services PMI,54.0,54.2,54.5,High,Positive
