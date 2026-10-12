@@ -1,24 +1,24 @@
 Indicator,Actual,Forecast,Previous,Impact,Correlation
-Core CPI m/m,0.0%,0.2%,0.2%,High,Positive
-Core CPI y/y,2.6%,2.8%,2.9%,High,Positive
-CPI m/m,-0.4%,-0.1%,0.5%,High,Positive
-CPI y/y,3.5%,3.8%,4.2%,High,Positive
-Final GDP q/q,2.1%,1.6%,1.6%,High,Negative
-Core PCE Price Index m/m,0.3%,0.3%,0.3%,High,Positive
-Prelim GDP q/q,0.7%,1.4%,1.4%,High,Positive
-Core PPI m/m,0.4%,0.5%,0.7%,High,Positive
-PPI m/m,1.1%,0.7%,1.1%,High,Positive
-Federal Funds Rate,3.75%,3.75%,3.75%,High,Positive
-Advance GDP q/q,2.0%,2.2%,0.5%,High,Negative
-Flash Manufacturing PMI,52.4,51.5,51.6,High,Positive
-Flash Services PMI,51.1,52.0,51.7,High,Positive
-JOLTS Job Openings,6.88M,6.89M,7.24M,High,Positive
-ADP Non-Farm Employment Change,122K,118K,105K,High,Positive
-Core Retail Sales m/m,0.5%,0.3%,0.0%,High,Positive
-Retail Sales m/m,0.6%,0.5%,-0.1%,High,Positive
-ISM Manufacturing PMI,53.3,53.8,54.0,High,Positive
-Unemployment Claims,202K,212K,211K,High,Negative
-Average Hourly Earnings m/m,0.3%,0.3%,0.3%,High,Positive
-Non-Farm Employment Change,57K,114K,129K,High,Positive
-Unemployment Rate,4.2%,4.3%,4.3%,High,Negative
-ISM Services PMI,54.0,54.2,54.5,High,Positive
+Core CPI m/m,0.3%,0.2%,0.2%,High,Positive
+Core CPI y/y,2.4%,2.4%,2.5%,High,Positive
+CPI m/m,0.4%,0.3%,0.1%,High,Positive
+CPI y/y,3.4%,3.3%,3.4%,High,Positive
+Final GDP q/q,3.0%,3.0%,2.8%,High,Negative
+Core PCE Price Index m/m,0.1%,0.2%,0.2%,High,Positive
+Prelim GDP q/q,3.0%,2.8%,1.4%,High,Positive
+Core PPI m/m,0.3%,0.2%,-0.2%,High,Positive
+PPI m/m,0.2%,0.1%,0.1%,High,Positive
+Federal Funds Rate,4.00%,4.00%,3.75%,High,Positive
+Advance GDP q/q,2.8%,2.0%,1.4%,High,Negative
+Flash Manufacturing PMI,47.3,47.5,47.9,High,Positive
+Flash Services PMI,55.2,55.3,55.7,High,Positive
+JOLTS Job Openings,8.04M,7.64M,7.71M,High,Positive
+ADP Non-Farm Employment Change,143K,124K,103K,High,Positive
+Core Retail Sales m/m,0.1%,0.2%,0.4%,High,Positive
+Retail Sales m/m,0.1%,-0.2%,1.0%,High,Positive
+ISM Manufacturing PMI,47.2,47.5,47.2,High,Positive
+Unemployment Claims,258K,230K,225K,High,Negative
+Average Hourly Earnings m/m,0.4%,0.3%,0.4%,High,Positive
+Non-Farm Employment Change,29K,90K,133K,High,Positive
+Unemployment Rate,4.2%,4.2%,4.2%,High,Negative
+ISM Services PMI,54.9,51.7,51.5,High,Positive
